@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
             load_saves(message)
             clearTimeout(connectionTimeout);
         }
-        else if (message[0] === "Save Loaded Succesfully") {
+        else if (message[0] === "DB Loaded Succesfully") {
             remove_drivers()
             removeStatsDrivers()
             place_drivers(message.slice(1))

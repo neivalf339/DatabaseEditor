@@ -24,7 +24,7 @@ async def handle_command(message):
     argument = ""
     if type == "connect":
         argument = type
-        saves = [element for element in os.listdir("../") if ".sav" in element]
+        saves = [element for element in os.listdir("../DB/") if ".db" in element]
         if "player.sav" in saves:
             saves.remove("player.sav")
         saves.insert(0, "Connected Succesfully")
@@ -32,38 +32,36 @@ async def handle_command(message):
         await send_message_to_client(data_saves)
 
     elif type == "saveSelected":
-        save = message["save"]
-        argument = type + " " + save
-        path = "../" + save
-        process_unpack(path, "../result")
-        conn = sqlite3.connect("../result/main.db")
+        db = message["save"]
+        argument = type + " " + db
+        path = "../DB/" + db
+        print(path)
+        conn = sqlite3.connect(path)
         cursor = conn.cursor()
         drivers = fetch_drivers()
-        drivers.insert(0, "Save Loaded Succesfully")
+        print(drivers)
+        drivers.insert(0, "DB Loaded Succesfully")
         data_json = json.dumps(drivers)
         await send_message_to_client(data_json)
 
     elif type =="hire":
         argument = "hire " + message["driverID"] + " " + str(message["teamID"]) + " " + message["position"] + " " + message["salary"] + " " + message["signBonus"] + " " + message["raceBonus"] + " " + message["raceBonusPos"] + " " + message["year"]
-        run_trasnsfer(argument)
-        process_repack("../result", path)
+        run_trasnsfer(argument  + " " + path)
         info = []
         info.insert(0, "Succesfully moved " + message["driver"] + " into " + message["team"])
         info_json = json.dumps(info)
         await send_message_to_client(info_json)
     elif type =="fire":
         argument = "fire " + message["driverID"]
-        run_trasnsfer(argument)
-        process_repack("../result", path)
+        run_trasnsfer(argument  + " " + path)
         info = []
         info.insert(0, "Succesfully released " + message["driver"] + " from " + message["team"])
         info_json = json.dumps(info)
         await send_message_to_client(info_json)
 
     elif type =="editStats":
-        run_editStats(message["driverID"] + " " + message["statsArray"])
+        run_editStats(message["driverID"] + " " + message["statsArray"]  + " " + path)
         argument = type + " " + message["driverID"] + " " + message["statsArray"]
-        process_repack("../result", path)
         info = []
         info.insert(0, "Succesfully edited " + message["driver"] + "'s stats")
         info_json = json.dumps(info)
