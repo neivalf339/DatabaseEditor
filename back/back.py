@@ -35,11 +35,9 @@ async def handle_command(message):
         db = message["save"]
         argument = type + " " + db
         path = "../DB/" + db
-        print(path)
         conn = sqlite3.connect(path)
         cursor = conn.cursor()
         drivers = fetch_drivers()
-        print(drivers)
         drivers.insert(0, "DB Loaded Succesfully")
         data_json = json.dumps(drivers)
         await send_message_to_client(data_json)
