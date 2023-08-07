@@ -25,8 +25,6 @@ async def handle_command(message):
     if type == "connect":
         argument = type
         saves = [element for element in os.listdir("../DB/") if ".db" in element]
-        if "player.sav" in saves:
-            saves.remove("player.sav")
         saves.insert(0, "Connected Succesfully")
         data_saves = json.dumps(saves)
         await send_message_to_client(data_saves)
@@ -37,23 +35,33 @@ async def handle_command(message):
         path = "../DB/" + db
         conn = sqlite3.connect(path)
         cursor = conn.cursor()
-        drivers = fetch_drivers()
+        drivers = fetch_info()
         drivers.insert(0, "DB Loaded Succesfully")
         data_json = json.dumps(drivers)
         await send_message_to_client(data_json)
 
     elif type =="hire":
-        argument = "hire " + message["driverID"] + " " + str(message["teamID"]) + " " + message["position"] + " " + message["salary"] + " " + message["signBonus"] + " " + message["raceBonus"] + " " + message["raceBonusPos"] + " " + message["year"]
+        argument = "hire " + message["driverID"] + " " + str(message["teamID"]) + " " + message["position"] + " " + message["salary"] + " " + message["signBonus"] + " " + message["raceBonus"] + " " + message["raceBonusPos"] + " " + message["year"] + " " + path
         run_trasnsfer(argument  + " " + path)
         info = []
         info.insert(0, "Succesfully moved " + message["driver"] + " into " + message["team"])
         info_json = json.dumps(info)
         await send_message_to_client(info_json)
+
     elif type =="fire":
         argument = "fire " + message["driverID"]
         run_trasnsfer(argument  + " " + path)
         info = []
         info.insert(0, "Succesfully released " + message["driver"] + " from " + message["team"])
+        info_json = json.dumps(info)
+        await send_message_to_client(info_json)
+
+    elif type =="autocontract":
+        argument = "hire " + message["driverID"] + " " +  str(message["teamID"]) + " " + message["position"] + " " + path
+        run_trasnsfer(argument)
+        print("terminw")
+        info = []
+        info.insert(0, "Succesfully moved " + message["driver"] + " into " + message["team"])
         info_json = json.dumps(info)
         await send_message_to_client(info_json)
 
@@ -64,6 +72,8 @@ async def handle_command(message):
         info.insert(0, "Succesfully edited " + message["driver"] + "'s stats")
         info_json = json.dumps(info)
         await send_message_to_client(info_json)
+
+
 
     log.write("[" + str(datetime.now()) + "] INFO: Command executed: " + argument + "\n")
     log.flush()
@@ -83,6 +93,11 @@ async def handle_client(websocket, path):
     except Exception as e:
         log.write("[" + str(datetime.now()) + "] EXCEPTION:" + str(e) + "\n")
         log.flush()
+        info = []
+        info.insert(0, "ERROR")
+        info.insert(1, "Something went wrong. Please restart the tool")
+        info_json = json.dumps(info)
+        await send_message_to_client(info_json)
     finally:
         client = None
         conn.commit()
@@ -99,15 +114,20 @@ async def start_server():
 async def main():
     await start_server()
 
-def fetch_drivers():
+def fetch_info():
 
     drivers = cursor.execute('SELECT  bas.FirstName, bas.LastName, bas.StaffID, con.TeamID, con.PosInTeam FROM Staff_BasicData bas JOIN Staff_DriverData dri ON bas.StaffID = dri.StaffID LEFT JOIN Staff_Contracts con ON dri.StaffID = con.StaffID WHERE ContractType = 0 OR ContractType IS NULL;').fetchall()
     formatted_tuples = []
     for tupla in drivers:
         result = format_names_get_stats(tupla)
         formatted_tuples.append(result)
+
+
     
     return formatted_tuples
+
+
+    
 
 def format_names_get_stats(name):
     nombre_pattern = r'StaffName_Forename_(Male|Female)_(\w+)'
@@ -127,8 +147,8 @@ def format_names_get_stats(name):
     resultado = (name_formatted, name[2], team_id, pos_in_team)
 
     stats = cursor.execute("SELECT Val FROM Staff_PerformanceStats WHERE StaffID = " + str(name[2]) + " AND StatID BETWEEN 2 AND 10").fetchall()
-
-    nums = resultado + tuple(stat[0] for stat in stats)
+    additionalStats = cursor.execute("SELECT Improvability, Aggression FROM Staff_DriverData WHERE StaffID = " + str(name[2])).fetchone()
+    nums = resultado + tuple(stat[0] for stat in stats) + additionalStats
 
     return nums
 

@@ -1,6 +1,9 @@
 import sqlite3
 import random
 
+conn = None
+cursor = None
+
 def run_script(option=""):
 
 
@@ -9,7 +12,11 @@ def run_script(option=""):
 
     path =  params[-1]
 
+    print(path)
+
+    global conn
     conn = sqlite3.connect(path)
+    global cursor 
     cursor = conn.cursor()
     
 
@@ -32,7 +39,8 @@ def run_script(option=""):
         day = cursor.execute("SELECT Day FROM Player_State").fetchone()
         year =  cursor.execute("SELECT CurrentSeason FROM Player_State").fetchone()
 
-        if(len(params) == 3 or len(params) == 4):
+        if(len(params) == 4 or len(params) == 5):
+            print("huebos")
             tier = get_tier(driver_id)
             if(tier == 1):
                 salary = str(round(random.uniform(14, 30),3)*1000000) 
@@ -71,7 +79,7 @@ def run_script(option=""):
             if(year[0] - int(yob) > 34):
                 year_end = str(random.randint(1, 2) + year[0])
 
-            #print(tier)
+            print(tier)
             
             if(has_bonus):
                 prestige_values = cursor.execute("SELECT PtsFromConstructorResults, PtsFromDriverResults, PtsFromSeasonsEntered, PtsFromChampionshipsWon FROM Board_Prestige WHERE SeasonID = " + str(year[0]) +  " AND TeamID = " + str(new_team_id)).fetchall()
@@ -91,6 +99,8 @@ def run_script(option=""):
                     race_bonus = str(0)
                     race_bonus_pos = str(1)
             else: race_bonus_pos = str(1) 
+
+            print("aaaaaaaaaaaaaa")
             
             if(len(params) != 4):
                 number_1s_team = len(cursor.execute("SELECT con.PosInTeam FROM Staff_Contracts con JOIN Staff_BasicData com ON con.StaffID = com.StaffID  WHERE con.ContractType = 0 AND con.TeamID = " + str(new_team_id) + " AND con.PosInTeam = 1").fetchall())
@@ -289,8 +299,6 @@ def run_script(option=""):
 
 def get_tier(driverID):
 
-    conn = sqlite3.connect("scripts/result/main.db")
-    cursor = conn.cursor()
 
     driver_stats = cursor.execute("SELECT Val FROM Staff_PerformanceStats WHERE StaffID = " + str(driverID[0])).fetchall()
     cornering = float(driver_stats[0][0])
@@ -307,11 +315,10 @@ def get_tier(driverID):
     elif(rating >= 81): tier = 2
     elif(rating >= 77): tier = 3
     else: tier = 4
+
     return tier
 
 def get_driver_id(name):
-    conn = sqlite3.connect("scripts/result/main.db")
-    cursor = conn.cursor()
 
     driver = name.capitalize()
     #gets the driver id of the driver you want to transfer
