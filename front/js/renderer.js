@@ -1,5 +1,14 @@
 const socket = new WebSocket('ws://localhost:8765/');
 
+socket.onopen = () => {
+    //console.log('Conexión establecida.');
+    let data = {
+        command: "connect"
+    }
+    socket.send(JSON.stringify(data))
+
+};
+
 document.addEventListener('DOMContentLoaded', function () {
 
 
@@ -30,14 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     
 
-    socket.onopen = () => {
-        //console.log('Conexión establecida.');
-        let data = {
-            command: "connect"
-        }
-        socket.send(JSON.stringify(data))
 
-    };
 
     socket.onmessage = (event) => {
         // const mensaje = event.data;
